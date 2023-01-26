@@ -146,18 +146,31 @@ const doListen = function(module, event, callback, context, once, internal=false
 
       if (Object.values(listeners.get(key)).length === 0) {
         const { id, promise } = Transport.listen(module, 'on' + event[0].toUpperCase() + event.substring(1), { listen: true })
+        
+        const setter = internal ? listeners.setInternal : listeners.set
+        promise.then(id => {
+          if (wildcard) {
+            setter(key, ''+listenerId, value => callback(event, value))
+          }
+          else {
+            setter(key, ''+listenerId, callback)
+          }
+        }).catch( error => {
+          reject(error)
+        })
+
         keys[id] = key
         promises.push(promise)
       }
 
-      const setter = internal ? listeners.setInternal : listeners.set
+      // const setter = internal ? listeners.setInternal : listeners.set
 
-      if (wildcard) {
-        setter(key, ''+listenerId, value => callback(event, value))
-      }
-      else {
-        setter(key, ''+listenerId, callback)
-      }
+      // if (wildcard) {
+      //   setter(key, ''+listenerId, value => callback(event, value))
+      // }
+      // else {
+      //   setter(key, ''+listenerId, callback)
+      // }
     })
 
     let resolve, reject
